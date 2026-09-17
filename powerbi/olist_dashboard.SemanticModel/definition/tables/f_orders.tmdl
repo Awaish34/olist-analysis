@@ -1,0 +1,203 @@
+table f_orders
+	lineageTag: d2abce02-9af1-4e7a-89df-877487866412
+
+	column order_id
+		dataType: string
+		lineageTag: b5c45025-ae10-459f-bf6c-bb3e90a6de24
+		summarizeBy: none
+		sourceColumn: order_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_id
+		dataType: string
+		lineageTag: 3eed3938-39f9-466f-8091-e68e8784a3c4
+		summarizeBy: none
+		sourceColumn: customer_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column order_status
+		dataType: string
+		lineageTag: 00d744be-9c2b-459d-9194-6ffa9dde578f
+		summarizeBy: none
+		sourceColumn: order_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column order_purchase_timestamp
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: a45842be-e07f-4aa2-a459-c3525502ecd3
+		summarizeBy: none
+		sourceColumn: order_purchase_timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column order_delivered_customer_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 1a1d5548-a8e8-4ef4-83f7-c47cc0f18833
+		summarizeBy: none
+		sourceColumn: order_delivered_customer_date
+
+		variation Variation
+			isDefault
+			relationship: 1482e170-b937-4cca-aff1-8e60a4e7f0af
+			defaultHierarchy: LocalDateTable_6843d2a9-dbf1-42b4-9146-6b948c3e9d6e.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column order_estimated_delivery_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 0cdaaf52-85ce-4de0-b130-f0842b376b11
+		summarizeBy: none
+		sourceColumn: order_estimated_delivery_date
+
+		variation Variation
+			isDefault
+			relationship: 8148d8b6-f21c-421e-a141-3851e4aaa0a7
+			defaultHierarchy: LocalDateTable_9eba8f5b-9514-4dfa-8620-a5d8b57019b2.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column purchase_date = ```
+			
+			DATE (
+			    YEAR ( f_orders[order_purchase_timestamp] ),
+			    MONTH ( f_orders[order_purchase_timestamp] ),
+			    DAY ( f_orders[order_purchase_timestamp] )
+			)
+			
+			```
+		formatString: Long Date
+		lineageTag: 30a0c742-3b9e-48e1-a528-19c3ca13eddb
+		summarizeBy: none
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column delivery_days = ```
+			
+			IF (
+			    f_orders[order_status] = "delivered"
+			        && NOT ISBLANK ( f_orders[order_delivered_customer_date] )
+			        && NOT ISBLANK ( f_orders[order_purchase_timestamp] ),
+			    DATEDIFF (
+			        f_orders[order_purchase_timestamp],
+			        f_orders[order_delivered_customer_date],
+			        DAY
+			    ),
+			    BLANK()
+			)
+			
+			```
+		formatString: 0
+		lineageTag: 61e1f50f-9f11-4b98-a500-05b7a161808f
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column delivery_sla_bucket = ```
+			
+			VAR d = f_orders[delivery_days]
+			RETURN
+			SWITCH (
+			    TRUE(),
+			    ISBLANK ( d ), BLANK(),
+			    d <= 7, "≤ 7 days",
+			    d <= 15, "8–15 days",
+			    d <= 30, "16–30 days",
+			    "> 30 days"
+			)
+			
+			```
+		lineageTag: 5e803e42-9000-472d-bbc9-82cadc90efac
+		summarizeBy: none
+		sortByColumn: delivery_sla_sort
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column delivery_sla_sort = ```
+			
+			VAR d = f_orders[delivery_days]
+			RETURN
+			SWITCH (
+			    TRUE(),
+			    ISBLANK ( d ), BLANK(),
+			    d <= 7, 1,
+			    d <= 15, 2,
+			    d <= 30, 3,
+			    4
+			)
+			
+			```
+		formatString: 0
+		lineageTag: bac8416d-fed5-42f3-81af-db6426afb122
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Delivery Days Bin Label' = ```
+			
+			VAR center = f_orders[Delivery Days Bin Center]
+			RETURN
+			FORMAT ( center - 5, "0" )
+			& "–"
+			& FORMAT ( center + 4, "0" )
+			& " days"
+			
+			
+			
+			
+			```
+		lineageTag: b2a5ae00-3de2-4eb2-8dc0-4ea68050739e
+		summarizeBy: none
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Delivery Days Bin Center' = ```
+			
+			VAR binSize = 10
+			VAR days = f_orders[delivery_days]
+			RETURN
+			IF (
+			    ISBLANK ( days ),
+			    BLANK (),
+			    binSize * INT ( days / binSize ) + ( binSize / 2 )
+			)
+			
+			```
+		lineageTag: 2268cdfd-d51f-441a-b8bf-2654a1a42090
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition f_orders = m
+		mode: import
+		source =
+				let
+				    Source = _DataFolder,
+				    Filtered = Table.SelectRows(
+				        Source,
+				        each [Name] = "orders_clean.parquet"
+				    ),
+				    Content = Filtered{0}[Content],
+				    Orders = Parquet.Document(Content)
+				in
+				    Orders
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
