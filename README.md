@@ -155,13 +155,14 @@ Ce projet complète le portfolio aux côtés de :
 
 ## 👤 Auteur
 
-**Simon Jorite**
+**Awaish maniyar**
 Data Analyst - [Certifié Microsoft Power BI Data Analyst (PL-300)](https://learn.microsoft.com/en-us/users/simonjorite-4846/credentials/b2cc3310a92a9302)
 
 15 ans d'expérience en finance, opérations et e-commerce. Je transforme des jeux de données complexes en KPI fiables et en tableaux de bord prêts pour la décision.
 
-- GitHub : [github.com/SimonNC](https://github.com/SimonNC)
-- LinkedIn : [linkedin.com/in/simonjorite](https://www.linkedin.com/in/simonjorite)
-- Email : simon.jorite@gmail.com
-- Localisation : Lyon, France (Ouvert à un poste hybride ou en télétravail)
-- Prise de RDV : [Réserver un échange de 30 min](https://cal.clixius.com/simon/echange)
+- GitHub : [ https://github.com/Awaish34]
+- LinkedIn : [https://www.linkedin.com/feed/]
+- Email : aaveshmanyar23@gmail.com
+- Localisation : (Jalgaon)
+
+ 
